@@ -40,6 +40,10 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
+On Linux, OpenCV and MediaPipe also need some graphics libraries (most
+desktops already have them; on Ubuntu/Debian:
+`sudo apt install libgl1 libegl1 libgles2`).
+
 On a Mac you can also turn it into a normal app with a Dock icon (needs
 Xcode or its command line tools):
 

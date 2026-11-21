@@ -42,9 +42,9 @@ jobs:
           python -m venv .venv
           .venv/bin/python -m pip install -r requirements.txt
 
-      - name: OpenGL library that OpenCV needs (Linux)
+      - name: Graphics libraries that OpenCV and MediaPipe need (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libgl1
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libgles2
 
       - name: Use the .venv's Python from here on
         shell: bash
