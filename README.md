@@ -37,8 +37,9 @@
    **Code** button, then **Download ZIP**. Open the downloaded file.
    You now have a folder called **`filter-portal-main`** in Downloads.
 3. **Start it**: open the **Terminal** app (press <kbd>Cmd</kbd>+<kbd>Space</kbd>,
-   type `Terminal`, press <kbd>Enter</kbd>). Copy this line, paste it into
-   Terminal and press <kbd>Enter</kbd>:
+   type `Terminal`, press <kbd>Enter</kbd>). Copy this line (the copy button
+   is at the right end of the box), paste it into Terminal and press
+   <kbd>Enter</kbd>:
 
    ```bash
    cd ~/Downloads/filter-portal-main && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python filter_portal.py
@@ -79,8 +80,6 @@ folder where it is: the app runs from there.
 
 ## 🖐️ How to use
 
-<img src="docs/gesture.png" alt="A hand with the thumb tip touching the pinky tip" width="220" align="right">
-
 | Do this | What happens |
 |---|---|
 | Hold up both hands like a frame: **pointer fingers on top, thumbs at the bottom** | The portal opens |
@@ -92,7 +91,14 @@ folder where it is: the app runs from there.
 
 **Tip:** twist one hand so its thumb is on top, and the frame crosses into an X.
 
-<br clear="right">
+### Changing the filter with your hand
+
+Touch the tip of your thumb to the tip of your pinky, then let go. Each
+touch switches to the next filter.
+
+<p align="center">
+  <img src="docs/gesture.png" alt="A hand with the thumb tip touching the pinky tip" width="240">
+</p>
 
 ## 🎨 The 6 filters
 
@@ -104,7 +110,7 @@ folder where it is: the app runs from there.
 
 ## 🛟 Something not working?
 
-**"Could not open the webcam"**
+**"Could not open the webcam"**<br>
 Close other apps that use the camera (Zoom, Teams, FaceTime...). Then check
 the camera is allowed:
 - **Windows:** Settings › Privacy & security › Camera. Turn on
@@ -112,16 +118,16 @@ the camera is allowed:
 - **Mac:** System Settings › Privacy & Security › Camera. Turn on
   **Terminal** (or **Filter Portal** if you made the Dock app).
 
-**No frame appears**
+**No frame appears**<br>
 Show **both** hands fully, not too close to the camera, in good light. The
 text on screen says how many hands it can see.
 
-**Touching thumb to pinky doesn't change the filter**
+**Touching thumb to pinky doesn't change the filter**<br>
 Hold the touch for a moment, then let go before the next one. Press
 <kbd>D</kbd> to see how sure the app is that you're touching. You can also
 press <kbd>1</kbd> to <kbd>6</kbd> instead.
 
-**Windows says "Python was not found"**
+**Windows says "Python was not found"**<br>
 Install Python again from [python.org](https://www.python.org/downloads/)
 and tick **"Add python.exe to PATH"** if the installer shows it.
 
