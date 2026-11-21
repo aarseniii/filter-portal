@@ -1,185 +1,210 @@
-# Filter Portal
+<p align="center">
+  <img src="docs/banner.svg" alt="Filter Portal: make a frame with your hands, everything inside it gets a filter" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/how-it-works.png" alt="Two hands make a frame in front of the camera. Inside the frame the picture has a filter, outside it looks normal." width="640">
+</p>
+
+<p align="center">
+  Hold up both hands in front of your webcam like a picture frame.<br>
+  Everything inside the frame gets a filter. Everything outside stays normal.<br>
+  <b>Free. Works on Windows and Mac.</b>
+</p>
+
+---
+
+## 📥 Install on Windows
+
+1. **Get Python** (free): go to [python.org/downloads](https://www.python.org/downloads/),
+   download it and run the installer. If you see a box called
+   **"Add python.exe to PATH"**, tick it.
+2. **Get Filter Portal**: at the top of this page, click the green
+   **Code** button, then **Download ZIP**. Open the downloaded file and
+   click **Extract all**.
+3. **Start it**: open the extracted folder (if there's another folder
+   inside, open that too) and double-click **`Filter Portal.bat`**.
+   - If Windows shows a warning, click **More info**, then **Run anyway**
+     (or just **Run**).
+   - The first time, it sets itself up. This takes a few minutes. After
+     that it starts right away.
+
+## 📥 Install on Mac
+
+1. **Get Python** (free): go to [python.org/downloads](https://www.python.org/downloads/),
+   download it and run the installer.
+2. **Get Filter Portal**: at the top of this page, click the green
+   **Code** button, then **Download ZIP**. Open the downloaded file.
+   You now have a folder called **`filter-portal-main`** in Downloads.
+3. **Start it**: open the **Terminal** app (press <kbd>Cmd</kbd>+<kbd>Space</kbd>,
+   type `Terminal`, press <kbd>Enter</kbd>). Copy this line, paste it into
+   Terminal and press <kbd>Enter</kbd>:
+
+   ```bash
+   cd ~/Downloads/filter-portal-main && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python filter_portal.py
+   ```
+
+   The first time takes a few minutes. If your Mac asks whether Terminal
+   may use the camera or open files in Downloads, click **Allow** (or **OK**).
+4. **Next time**, paste this shorter line instead:
+
+   ```bash
+   cd ~/Downloads/filter-portal-main && .venv/bin/python filter_portal.py
+   ```
+
+<details>
+<summary>Want a Filter Portal icon in your Dock instead of using Terminal?</summary>
+
+<br>
+
+Paste these two lines into Terminal, one at a time. The first one installs
+Apple's free developer tools (click **Install** when asked, it takes a few
+minutes). The second one builds the app and puts it in your Dock.
+
+```bash
+xcode-select --install
+```
+
+```bash
+cd ~/Downloads/filter-portal-main && .venv/bin/python build_app.py
+```
+
+After that, just click **Filter Portal** in the Dock. The first time, click
+**Allow** when it asks to use the camera. Keep the `filter-portal-main`
+folder where it is: the app runs from there.
+
+</details>
+
+---
+
+## 🖐️ How to use
+
+<img src="docs/gesture.png" alt="A hand with the thumb tip touching the pinky tip" width="220" align="right">
+
+| Do this | What happens |
+|---|---|
+| Hold up both hands like a frame: **pointer fingers on top, thumbs at the bottom** | The portal opens |
+| **Touch your thumb to your pinky** (either hand) | Next filter |
+| Press <kbd>1</kbd> to <kbd>6</kbd> | Pick a filter |
+| Press <kbd>S</kbd> | Save a picture (it goes to **Pictures › Filter Portal**) |
+| Press <kbd>H</kbd> | Hide the text on the screen |
+| Press <kbd>Q</kbd> | Quit |
+
+**Tip:** twist one hand so its thumb is on top, and the frame crosses into an X.
+
+<br clear="right">
+
+## 🎨 The 6 filters
+
+<p align="center">
+  <img src="docs/filters.png" alt="The six filters: purple tint, negative, grayscale, blur, edges, pixelate" width="720">
+</p>
+
+---
+
+## 🛟 Something not working?
+
+**"Could not open the webcam"**
+Close other apps that use the camera (Zoom, Teams, FaceTime...). Then check
+the camera is allowed:
+- **Windows:** Settings › Privacy & security › Camera. Turn on
+  **Camera access** and **Let desktop apps access your camera**.
+- **Mac:** System Settings › Privacy & Security › Camera. Turn on
+  **Terminal** (or **Filter Portal** if you made the Dock app).
+
+**No frame appears**
+Show **both** hands fully, not too close to the camera, in good light. The
+text on screen says how many hands it can see.
+
+**Touching thumb to pinky doesn't change the filter**
+Hold the touch for a moment, then let go before the next one. Press
+<kbd>D</kbd> to see how sure the app is that you're touching. You can also
+press <kbd>1</kbd> to <kbd>6</kbd> instead.
+
+**Windows says "Python was not found"**
+Install Python again from [python.org](https://www.python.org/downloads/)
+and tick **"Add python.exe to PATH"** if the installer shows it.
+
+---
+
+<details>
+<summary><b>For developers</b>: how it works, training the gesture model, tests</summary>
+
+<br>
 
 [![tests](https://github.com/aarseniii/filter-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/aarseniii/filter-portal/actions/workflows/tests.yml)
 
-Hold up both hands and the shape between your thumbs and index fingers
-becomes a "portal" showing your webcam through a filter. Everything outside
-the portal stays normal.
+### How it works
 
-The index fingertips make the top edge and the thumbs the bottom edge. Twist
-one hand until its thumb is above its index finger and the lines cross into
-an X, with the filter in both halves.
+[MediaPipe](https://ai.google.dev/edge/mediapipe) finds 21 points on each
+hand. The tips of both pointer fingers and both thumbs become the corners of
+the portal (smoothed so it doesn't jitter), and [OpenCV](https://opencv.org)
+applies the filter only inside that shape. The thumb-to-pinky switch is a
+small neural network that looks at each hand's 21 points; it runs with plain
+numpy. Settings like smoothing, filter strength and gesture sensitivity are
+at the top of `filter_portal.py`.
 
-## Setup
-
-Needs Python 3.10 or newer and a webcam. Works on macOS and Windows (and
-Linux); the automatic tests run on all three.
-
-Get the code: `git clone https://github.com/aarseniii/filter-portal.git`, or
-on GitHub click **Code > Download ZIP** and unzip it.
-
-### Windows
-
-1. Install Python from [python.org](https://www.python.org/downloads/). In
-   the installer, tick **"Add python.exe to PATH"**.
-2. In the `filter-portal` folder, double-click **`Filter Portal.bat`**.
-
-The first time, it sets up everything it needs (takes a few minutes, needs
-internet). After that, double-clicking it starts Filter Portal straight
-away. Tip: right-click it > **Show more options > Send to > Desktop (create
-shortcut)** to start it from your desktop.
-
-If the camera won't open, check **Settings > Privacy & security > Camera**:
-"Camera access" and "Let desktop apps access your camera" must be on.
-
-### Mac / Linux
+### Run from source
 
 ```bash
+git clone https://github.com/aarseniii/filter-portal.git
 cd filter-portal
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt     # Windows: .venv\Scripts\pip
+.venv/bin/python filter_portal.py             # Windows: .venv\Scripts\python
 ```
 
-On Linux, OpenCV and MediaPipe also need some graphics libraries (most
-desktops already have them; on Ubuntu/Debian:
-`sudo apt install libgl1 libegl1 libgles2`).
+On Linux, OpenCV and MediaPipe also need `libgl1 libegl1 libgles2`
+(Ubuntu/Debian: `sudo apt install libgl1 libegl1 libgles2`).
 
-On a Mac you can also turn it into a normal app with a Dock icon (needs
-Xcode or its command line tools):
+### The gesture model
 
-```bash
-.venv/bin/python build_app.py
-```
-
-## Run
-
-**Windows:** double-click **`Filter Portal.bat`**.
-
-**Mac (after `build_app.py`):** click **Filter Portal** in the Dock (or
-press Cmd+Space, type "Filter Portal", press Enter).
-
-- The very first time, macOS asks to let Filter Portal use the camera:
-  click **Allow**. If you clicked "Don't Allow" by mistake, the app shows a
-  button that opens the right Settings page; turn Filter Portal on there.
-- While it's open, its window shows up in the Dock with a Python icon.
-- If it's already open, clicking it again just tells you so.
-- Problems show in a message box; details go to
-  `~/Library/Logs/Filter Portal.log`.
-
-**From a terminal** (in this folder):
-
-```bash
-.venv/bin/python filter_portal.py        # Mac / Linux
-.venv\Scripts\python filter_portal.py    # Windows
-```
-
-The first run downloads MediaPipe's hand model (`hand_landmarker.task`,
-~8 MB). On a Mac, when run from a terminal, it's the terminal app that needs
-camera access (System Settings > Privacy & Security > Camera).
-
-### Rebuilding the Mac app (Mac only)
-
-```bash
-.venv/bin/python build_app.py
-```
-
-This (re)makes `~/Applications/Filter Portal.app` and adds it to the Dock
-if it isn't there yet (`--no-dock` to skip). The app runs Filter Portal from
-this folder, so if you move or rename the folder, run this again. It needs
-Xcode or its command line tools, because the app's small launcher is
-compiled Swift: it asks macOS for camera access the proper way, then sets
-up `.venv` if it's missing and starts `filter_portal.py`.
-
-## Controls
-
-| Input | Action |
-|---|---|
-| Both hands up, thumbs and index fingers spread | Open the portal |
-| `1` to `6` | Purple tint, negative, grayscale, blur, edges, pixelate |
-| Thumb tip on pinky tip (either hand, any pose) | Next filter |
-| `S` | Save a picture (without the text) to `Pictures/Filter Portal` |
-| `H` | Hide / show the on-screen text |
-| `D` | Show how sure the model is that each hand is touching |
-| `Q` or `Esc` | Quit |
-
-Settings such as smoothing, filter strength and gesture sensitivity are at
-the top of `filter_portal.py`.
-
-## Pinky-thumb gesture model
-
-`pinky_thumb_model.npz` is a small neural network trained on hand landmarks
-from [HaGRIDv2](https://github.com/hukenovs/hagrid), about a million hands
-from thousands of people. HaGRID only shows the touch with the other three
-fingers up, so training adds made-up touches built from real hands in every
-other pose, including the L-shaped portal hand.
-
-Results on HaGRID's held-out test set (people not seen in training):
-
-- Real touch photos: 99.7% recognised.
-- Made-up touches from the portal L-shape: 99.8% recognised.
-- Other, real hand poses: 0.06% wrongly seen as a touch.
-
-To retrain:
+`pinky_thumb_model.npz` was trained by `train_gesture_model.py` on hand
+landmarks from [HaGRIDv2](https://github.com/hukenovs/hagrid) (about a
+million hands). HaGRID only shows the touch with three fingers up, so
+training adds made-up touches built from real hands in every other pose,
+including the frame pose. On HaGRID's held-out test set (people not seen in
+training) it recognises 99.7% of real touches and 99.8% of made-up touches
+from the frame pose, and wrongly fires on 0.06% of other hand poses.
 
 ```bash
 .venv/bin/pip install -r requirements-train.txt
-.venv/bin/python train_gesture_model.py
+.venv/bin/python train_gesture_model.py      # downloads ~720 MB the first time
 ```
 
-This downloads HaGRIDv2's annotations (~720 MB) into `data/` the first time.
+To teach it your own hand, record about a minute of examples first (only
+hand point positions are saved, never images): run
+`.venv/bin/python record_my_gesture.py`, press <kbd>T</kbd> while touching,
+<kbd>N</kbd> for anything else, <kbd>S</kbd> to save, then train again.
 
-### Make it work better for you
+### Tests
 
-If the switch still misses your touches, or fires when it shouldn't, record
-about a minute of your own examples. Only hand landmark positions are saved,
-never images:
-
-```bash
-.venv/bin/python record_my_gesture.py
-.venv/bin/python train_gesture_model.py
-```
-
-In the recorder, press `T` to record touches, `N` to record anything else
-(the portal pose especially), and `S` to save. Training then reports how
-well the model does on the newest part of your recordings, which it didn't
-train on.
-
-On Windows, use `.venv\Scripts\python` instead of `.venv/bin/python` in the
-commands in this README.
-
-## Tests
-
-The tests don't use the webcam or open any windows:
+None of the tests use the webcam or open windows. GitHub runs them on
+Windows, macOS and Linux after every push.
 
 ```bash
 .venv/bin/python -m unittest discover tests -v
-bash tests/test_app_launcher.sh
+bash tests/test_app_launcher.sh               # Mac only: the Dock app's launcher
 ```
 
-The second one (Mac only) checks the Mac app's launcher with fake projects,
-using a throwaway copy of the app (your real app and Dock aren't touched).
-
-GitHub runs these automatically on Windows, macOS and Linux after every
-push (see the badge at the top and the **Actions** tab).
-
-## Files
+### Files
 
 | File | What it is |
 |---|---|
 | `filter_portal.py` | The app |
-| `train_gesture_model.py` | Trains the pinky-thumb model |
-| `record_my_gesture.py` | Records your own gesture examples (landmarks only) |
-| `Filter Portal.bat` | Windows: double-click to set up (first time) and start |
-| `build_app.py` | Makes the Mac app in `~/Applications` |
-| `pinky_thumb_model.npz` | The trained model (plain numpy arrays) |
-| `tests/` | Headless tests |
-| `.github/workflows/tests.yml` | Runs the tests on Windows, macOS and Linux |
+| `Filter Portal.bat` | Windows: double-click to set up and start |
+| `build_app.py` | Mac: builds the Dock app (needs Xcode command line tools) |
+| `train_gesture_model.py` | Trains the thumb-to-pinky model |
+| `record_my_gesture.py` | Records your own gesture examples |
+| `pinky_thumb_model.npz` | The trained model |
+| `docs/` | The pictures on this page (`docs/make_pictures.py` draws them) |
+| `tests/` | Tests |
 
-## License and credits
+</details>
 
-- The code is under the [MIT License](LICENSE).
-- `pinky_thumb_model.npz` and the sample hands in `tests/` are derived from
-  [HaGRIDv2](https://github.com/hukenovs/hagrid) by the HaGRID authors, and
-  stay under HaGRID's license (a variant of CC BY-SA 4.0).
-- Hand tracking: [Google MediaPipe](https://ai.google.dev/edge/mediapipe).
-  Its hand model is downloaded on first run and isn't included here.
+## 📄 License
+
+The code is free to use under the [MIT License](LICENSE). The gesture model
+and the sample hand data in `tests/` come from
+[HaGRIDv2](https://github.com/hukenovs/hagrid) and stay under its license (a
+variant of CC BY-SA 4.0). Hand tracking by Google MediaPipe.
