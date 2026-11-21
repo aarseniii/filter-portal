@@ -65,6 +65,12 @@ jobs:
         shell: bash
         run: $PY -m pip install -r requirements-train.txt
 
+      - name: Check the code for mistakes (pyflakes)
+        if: runner.os == 'Linux'
+        run: |
+          $PY -m pip install pyflakes
+          $PY -m pyflakes *.py tests/*.py
+
       - name: Unit tests (no camera)
         shell: bash
         run: $PY -m unittest discover tests -v

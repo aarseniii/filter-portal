@@ -97,6 +97,8 @@ up `.venv` if it's missing and starts `filter_portal.py`.
 | Both hands up, thumbs and index fingers spread | Open the portal |
 | `1` to `6` | Purple tint, negative, grayscale, blur, edges, pixelate |
 | Thumb tip on pinky tip (either hand, any pose) | Next filter |
+| `S` | Save a picture (without the text) to `Pictures/Filter Portal` |
+| `H` | Hide / show the on-screen text |
 | `D` | Show how sure the model is that each hand is touching |
 | `Q` or `Esc` | Quit |
 
