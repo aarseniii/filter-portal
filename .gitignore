@@ -1,0 +1,14 @@
+# Python environment and caches (rebuild with: pip install -r requirements.txt)
+.venv/
+__pycache__/
+*.pyc
+
+# HaGRID annotations (~720 MB) and your own gesture recordings
+data/
+
+# MediaPipe hand model: downloaded automatically on first run
+hand_landmarker.task
+*.part
+
+# macOS
+.DS_Store
