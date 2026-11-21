@@ -1,4 +1,4 @@
-"""
+r"""
 Filter Portal
 =============
 
@@ -25,10 +25,14 @@ How it works, per frame:
        If a hand drops out for a split second, the last shape is kept briefly
        so the portal doesn't flicker.
 
-Run it:
+Run it (Mac / Linux):
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
     .venv/bin/python filter_portal.py
+Run it (Windows): double-click "Filter Portal.bat", or
+    py -m venv .venv
+    .venv\Scripts\pip install -r requirements.txt
+    .venv\Scripts\python filter_portal.py
 
 Note: recent MediaPipe releases dropped the old `mp.solutions.hands` API, so
 this uses the newer "Tasks" HandLandmarker. It needs a small model file
@@ -214,9 +218,20 @@ def open_camera(wait_seconds=CAMERA_WAIT_SECONDS):
         time.sleep(1)
 
 
-CAMERA_HELP = ("Could not open the webcam. Allow camera access for Filter "
-               "Portal (or for the terminal you started it from) in System "
-               "Settings > Privacy & Security > Camera, then open it again.")
+if sys.platform == "darwin":
+    CAMERA_HELP = ("Could not open the webcam. Allow camera access for Filter "
+                   "Portal (or for the terminal you started it from) in System "
+                   "Settings > Privacy & Security > Camera, then open it "
+                   "again.")
+elif sys.platform == "win32":
+    CAMERA_HELP = ("Could not open the webcam. Close other apps that might be "
+                   "using it, and check Settings > Privacy & security > "
+                   "Camera: 'Camera access' and 'Let desktop apps access your "
+                   "camera' must be on. Then start Filter Portal again.")
+else:
+    CAMERA_HELP = ("Could not open the webcam. Check it's plugged in, not used "
+                   "by another app, and that you're allowed to use it (on "
+                   "Linux, your user may need to be in the 'video' group).")
 
 
 def create_hand_tracker():
@@ -285,12 +300,12 @@ class PinkyThumbDetector:
     """
 
     def __init__(self, path, threshold=None):
-        model = np.load(path)
-        count = int(model["num_layers"])
-        self.layers = [(model[f"weight{i}"], model[f"bias{i}"])
-                       for i in range(count)]
-        self.threshold = (float(model["threshold"]) if threshold is None
-                          else threshold)
+        with np.load(path) as model:   # "with" closes the file afterwards
+            count = int(model["num_layers"])
+            self.layers = [(model[f"weight{i}"], model[f"bias{i}"])
+                           for i in range(count)]
+            saved_threshold = float(model["threshold"])
+        self.threshold = saved_threshold if threshold is None else threshold
 
     def probability(self, hand_xy):
         x = hand_features(hand_xy)

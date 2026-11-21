@@ -1,4 +1,4 @@
-"""
+r"""
 Record your own pinky-thumb examples
 ====================================
 
@@ -19,7 +19,8 @@ Keys (press once to start, again to stop):
 
 Aim for about 30 seconds of each. Running it again adds to what you
 recorded before. Then retrain:
-    .venv/bin/python train_gesture_model.py
+    .venv/bin/python train_gesture_model.py          (Mac / Linux)
+    .venv\Scripts\python train_gesture_model.py      (Windows)
 """
 
 import os
@@ -46,9 +47,9 @@ def save_samples(path, hands, labels):
     hands = np.asarray(hands, dtype=np.float32).reshape(-1, 21, 2)
     labels = np.asarray(labels, dtype=np.int8)
     if os.path.exists(path):
-        old = np.load(path)
-        hands = np.concatenate([old["hands"], hands])
-        labels = np.concatenate([old["labels"], labels])
+        with np.load(path) as old:   # closed before we overwrite the file
+            hands = np.concatenate([old["hands"], hands])
+            labels = np.concatenate([old["labels"], labels])
     os.makedirs(os.path.dirname(path), exist_ok=True)
     np.savez(path, hands=hands, labels=labels)
     return len(labels)

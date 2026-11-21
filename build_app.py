@@ -374,6 +374,9 @@ def add_to_dock(app_path):
 
 
 def main():
+    if sys.platform != "darwin":
+        sys.exit("build_app.py makes a Mac app, so it only works on macOS. "
+                 "On Windows, double-click 'Filter Portal.bat' instead.")
     parser = argparse.ArgumentParser(description="Build Filter Portal.app")
     parser.add_argument("project", nargs="?", default=HERE,
                         help="folder with filter_portal.py (default: here)")
