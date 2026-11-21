@@ -1,4 +1,4 @@
-"""
+r"""
 Train the pinky-thumb gesture model used by filter_portal.py
 =============================================================
 
@@ -35,9 +35,12 @@ Steps:
     5. Save the weights as pinky_thumb_model.npz: plain numpy arrays, so
        the app runs it without scikit-learn.
 
-Run:
+Run (Mac / Linux):
     .venv/bin/pip install -r requirements-train.txt
     .venv/bin/python train_gesture_model.py
+Run (Windows):
+    .venv\Scripts\pip install -r requirements-train.txt
+    .venv\Scripts\python train_gesture_model.py
 """
 
 import json
@@ -223,10 +226,11 @@ def load_my_samples(rng, path=None):
     path = path or MY_SAMPLES_PATH
     if not os.path.exists(path):
         return None
-    data = np.load(path)
+    with np.load(path) as data:   # "with" closes the file afterwards
+        all_hands, all_labels = data["hands"], data["labels"]
     train_X, train_y, test_X, test_y = [], [], [], []
     for label in (0, 1):
-        hands = data["hands"][data["labels"] == label]   # oldest first
+        hands = all_hands[all_labels == label]   # oldest first
         cut = int(round(len(hands) * (1 - MY_TEST_SHARE)))
         for i, hand in enumerate(hands):
             f = hand_features(hand)
@@ -243,8 +247,8 @@ def load_my_samples(rng, path=None):
                                np.array(y, np.int8)))
     X_train, y_train = as_arrays(train_X, train_y)
     X_test, y_test = as_arrays(test_X, test_y)
-    print(f"  yours: {int(data['labels'].sum())} touch and "
-          f"{int((data['labels'] == 0).sum())} not-touch hands recorded "
+    print(f"  yours: {int(all_labels.sum())} touch and "
+          f"{int((all_labels == 0).sum())} not-touch hands recorded "
           f"({len(y_test)} kept for testing)")
     return X_train, y_train, X_test, y_test
 
