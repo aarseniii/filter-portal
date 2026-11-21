@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="Filter Portal: make a frame with your hands, everything inside it gets a filter">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26123f"/>
+      <stop offset="1" stop-color="#7d2a86"/>
+    </linearGradient>
+    <linearGradient id="icon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2d195f"/>
+      <stop offset="1" stop-color="#af3caa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="320" rx="28" fill="url(#bg)"/>
+
+  <!-- the app icon -->
+  <g transform="translate(188 64)">
+    <rect width="192" height="192" rx="43" fill="url(#icon)" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2"/>
+    <polygon points="46.6,53.6 148,43.3 153.8,141 38.4,147.9" fill="#ffffff" fill-opacity="0.35" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="46.6" cy="53.6" r="7" fill="#ffffff"/>
+    <circle cx="148" cy="43.3" r="7" fill="#ffffff"/>
+    <circle cx="153.8" cy="141" r="7" fill="#ffffff"/>
+    <circle cx="38.4" cy="147.9" r="7" fill="#ffffff"/>
+  </g>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="436" y="148" font-size="84" font-weight="700" fill="#ffffff">Filter Portal</text>
+    <text x="440" y="206" font-size="32" fill="#f3e8ff">Make a frame with your hands.</text>
+    <text x="440" y="250" font-size="32" fill="#f3e8ff">Everything inside it gets a filter.</text>
+  </g>
+</svg>

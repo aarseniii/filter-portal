@@ -8,6 +8,9 @@ fingers becomes a "portal" that shows the video through a filter.
     1 = purple tint     2 = negative     3 = grayscale
     4 = blur            5 = edges        6 = pixelate
     Touch your thumb to your pinky (either hand) = next filter
+    S = save a picture (to Pictures/Filter Portal)
+    H = hide / show the on-screen text
+    D = show how sure the gesture model is
     Q (or Esc) = quit
 
 The pinky-thumb gesture uses a small model trained by train_gesture_model.py
@@ -59,6 +62,11 @@ WINDOW_NAME = "Filter Portal"
 CAMERA_INDEX = 0             # 0 = default webcam; try 1, 2... for others
 CAMERA_SIZE = (1280, 720)    # requested resolution (camera may pick another)
 CAMERA_WAIT_SECONDS = 30     # how long to wait for you to allow camera access
+
+# S key: pictures are saved here, named by date and time.
+SNAPSHOT_FOLDER = os.path.join(os.path.expanduser("~"), "Pictures",
+                               "Filter Portal")
+MESSAGE_SECONDS = 2.5        # how long short messages stay on screen
 
 # How much of the previous position to keep each frame (0.0 to 0.95).
 # 0 = raw MediaPipe output (jittery); higher = smoother but laggier.
@@ -453,12 +461,41 @@ def put_text(frame, text, position, scale=0.7):
 
 def draw_hud(frame, filter_name, hands_seen, portal_open):
     put_text(frame, f"Filter: {filter_name}", (20, 40), scale=0.9)
-    put_text(frame, "1-6 or thumb on pinky: switch filter   "
-                    "D: touch confidence   Q: quit", (20, 75), scale=0.55)
+    put_text(frame, "1-6 or thumb on pinky: switch filter   Q: quit",
+             (20, 75), scale=0.55)
+    put_text(frame, "S: save picture   H: hide text   D: touch confidence",
+             (20, 102), scale=0.55)
     if not portal_open:
         put_text(frame, f"Hands seen: {hands_seen}/2 - show both hands, "
-                        "thumbs and index fingers spread", (20, 105),
-                 scale=0.55)
+                        "fingers spread", (20, 132), scale=0.55)
+
+
+# --------------------------------------------------------------------------
+# Pictures (S key)
+# --------------------------------------------------------------------------
+
+def save_snapshot(frame, folder=None):
+    """
+    Save `frame` as a PNG in `folder` (default: SNAPSHOT_FOLDER), named by
+    date and time, and return its path. Never overwrites an older picture.
+    Raises OSError if it can't be saved.
+    """
+    folder = folder or SNAPSHOT_FOLDER
+    os.makedirs(folder, exist_ok=True)
+    stamp = time.strftime("%Y-%m-%d %H.%M.%S")   # no ":" (Windows forbids it)
+    path = os.path.join(folder, f"Filter Portal {stamp}.png")
+    number = 2
+    while os.path.exists(path):   # two pictures in the same second
+        path = os.path.join(folder, f"Filter Portal {stamp} ({number}).png")
+        number += 1
+    # Encode in memory, then write with Python: unlike cv2.imwrite, this
+    # also works when the folder name has non-English letters (Windows).
+    ok, png = cv2.imencode(".png", frame)
+    if not ok:
+        raise OSError("couldn't encode the picture")
+    with open(path, "wb") as f:
+        f.write(png.tobytes())
+    return path
 
 
 # --------------------------------------------------------------------------
@@ -481,10 +518,14 @@ def main():
     portal_shape = None    # corners of the current portal, or None if closed
     last_seen_both = 0.0   # when both hands were last visible
     show_confidence = False   # D key toggles the touch-confidence readout
+    show_text = True          # H key hides / shows the on-screen text
+    snapshot_requested = False   # S key: save the next frame as a picture
+    message, message_until = "", 0.0   # short note, e.g. "Saved picture"
 
     cv2.namedWindow(WINDOW_NAME)
     print("Filter Portal running. Keys 1-6 switch filters"
-          + (" (or touch thumb to pinky)" if gesture else "") + ", Q quits.")
+          + (" (or touch thumb to pinky)" if gesture else "")
+          + ", S saves a picture, H hides the text, Q quits.")
 
     try:
         while True:
@@ -549,8 +590,23 @@ def main():
                     put_text(frame, f"{label} {p:.0%}",
                              (int(x) - 50, int(y) + 35), scale=0.7)
 
-            draw_hud(frame, FILTERS[current_filter][0], hands_seen,
-                     portal_open=portal_shape is not None)
+            # S key: save the picture now, before any text is drawn on it.
+            if snapshot_requested:
+                snapshot_requested = False
+                try:
+                    path = save_snapshot(frame)
+                    message = "Saved picture: " + os.path.basename(path)
+                    print("Saved picture:", path)
+                except OSError as err:
+                    message = f"Couldn't save the picture ({err})"
+                message_until = now + MESSAGE_SECONDS
+
+            if show_text:
+                draw_hud(frame, FILTERS[current_filter][0], hands_seen,
+                         portal_open=portal_shape is not None)
+            if message and now < message_until:
+                put_text(frame, message, (20, frame.shape[0] - 25),
+                         scale=0.7)
             cv2.imshow(WINDOW_NAME, frame)
 
             # Keyboard: waitKey also gives the window time to redraw.
@@ -561,6 +617,10 @@ def main():
                 current_filter = chr(key)
             if key in (ord("d"), ord("D")):
                 show_confidence = not show_confidence
+            if key in (ord("h"), ord("H")):
+                show_text = not show_text
+            if key in (ord("s"), ord("S")):
+                snapshot_requested = True
 
             # Quit if the window's close button was clicked.
             if cv2.getWindowProperty(WINDOW_NAME, cv2.WND_PROP_VISIBLE) < 1:

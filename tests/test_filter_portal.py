@@ -150,10 +150,18 @@ class MainLoopTest(unittest.TestCase):
 
     FPS = 30
 
-    def run_main(self, script, touching_frames=()):
+    def run_main(self, script, touching_frames=(), keys=None,
+                 snapshot_folder=None, displayed=None):
+        """
+        keys: {frame number: key pressed after that frame, e.g. "s"}.
+        displayed: if a list, gets a copy of every frame shown on screen.
+        Returns one (filter shown or None if the text was hidden, portal
+        shape or None) per frame.
+        """
+        keys = keys or {}
         clock = {"t": 1000.0}
         frame_no = {"i": -1}
-        log = []   # (filter shown, portal shape or None) per frame
+        log = []
 
         class FakeCamera:
             def __init__(self, *args): pass
@@ -186,10 +194,16 @@ class MainLoopTest(unittest.TestCase):
         shown = {}
         def fake_hud(frame, filter_name, hands_seen, portal_open):
             shown["filter"] = filter_name
+            frame[0, 0] = 255   # stands in for the on-screen text
         def fake_apply(frame, shape, fn):
             shown["shape"] = shape.copy()
         def fake_imshow(name, frame):
-            log.append((shown.pop("filter"), shown.pop("shape", None)))
+            log.append((shown.pop("filter", None), shown.pop("shape", None)))
+            if displayed is not None:
+                displayed.append(frame.copy())
+        def fake_wait_key(*args):
+            key = keys.get(frame_no["i"])
+            return ord(key) if key else 255
 
         patches = [
             mock.patch.object(fp, "ensure_model", lambda: None),
@@ -203,10 +217,12 @@ class MainLoopTest(unittest.TestCase):
             mock.patch.object(fp.cv2, "VideoCapture", FakeCamera),
             mock.patch.object(fp.cv2, "namedWindow", lambda *a: None),
             mock.patch.object(fp.cv2, "imshow", fake_imshow),
-            mock.patch.object(fp.cv2, "waitKey", lambda *a: 255),
+            mock.patch.object(fp.cv2, "waitKey", fake_wait_key),
             mock.patch.object(fp.cv2, "getWindowProperty", lambda *a: 1),
             mock.patch.object(fp.cv2, "destroyAllWindows", lambda: None),
             mock.patch("builtins.print", lambda *a, **k: None),
+            mock.patch.object(fp, "SNAPSHOT_FOLDER",
+                              snapshot_folder or "/nonexistent-test-folder"),
         ]
         for p in patches:
             p.start()
@@ -240,6 +256,52 @@ class MainLoopTest(unittest.TestCase):
         for shape in frozen:
             np.testing.assert_array_equal(shape, frozen[0])
         self.assertFalse(np.array_equal(log[25][1], frozen[0]))
+
+    def test_s_key_saves_picture_without_the_text(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            displayed = []
+            self.run_main([self.TWO] * 10, keys={3: "s"},
+                          snapshot_folder=folder, displayed=displayed)
+            files = os.listdir(folder)
+            self.assertEqual(len(files), 1)
+            self.assertTrue(files[0].startswith("Filter Portal ")
+                            and files[0].endswith(".png"))
+            picture = cv2.imread(os.path.join(folder, files[0]))
+        self.assertEqual(picture.shape, (720, 1280, 3))
+        self.assertTrue((picture[0, 0] == 100).all())        # no text in it
+        self.assertTrue((displayed[4][0, 0] == 255).all())   # but on screen
+
+    def test_h_key_hides_and_shows_the_text(self):
+        log = self.run_main([self.TWO] * 10, keys={2: "h", 6: "H"})
+        text_drawn = [name is not None for name, _ in log]
+        self.assertEqual(text_drawn, [True] * 3 + [False] * 4 + [True] * 3)
+
+    def test_failed_save_shows_message_and_keeps_running(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            blocker = os.path.join(folder, "not-a-folder")
+            open(blocker, "w").close()   # a file where the folder should be
+            log = self.run_main([self.TWO] * 10, keys={3: "s"},
+                                snapshot_folder=os.path.join(blocker, "x"))
+        self.assertEqual(len(log), 10)   # every frame was still shown
+
+
+class SnapshotTests(unittest.TestCase):
+    def test_pictures_never_overwrite_and_handle_non_english_names(self):
+        import tempfile
+        frame = np.full((48, 64, 3), 77, np.uint8)
+        with tempfile.TemporaryDirectory() as root:
+            folder = os.path.join(root, "Фото Filter Portal")   # Cyrillic
+            first = fp.save_snapshot(frame, folder)
+            second = fp.save_snapshot(frame, folder)
+            self.assertNotEqual(first, second)
+            self.assertEqual(sorted(os.listdir(folder)),
+                             sorted([os.path.basename(first),
+                                     os.path.basename(second)]))
+            with open(second, "rb") as f:
+                data = np.frombuffer(f.read(), np.uint8)
+            self.assertTrue((cv2.imdecode(data, cv2.IMREAD_COLOR) == 77).all())
 
 
 class CameraTests(unittest.TestCase):
