@@ -1,0 +1,6 @@
+# Keep line endings right on every computer.
+* text=auto
+# Windows batch files need Windows (CRLF) line endings.
+*.bat text eol=crlf
+*.sh text eol=lf
+*.npz binary

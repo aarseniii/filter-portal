@@ -1,5 +1,7 @@
 # Filter Portal
 
+[![tests](https://github.com/aarseniii/filter-portal/actions/workflows/tests.yml/badge.svg)](https://github.com/aarseniii/filter-portal/actions/workflows/tests.yml)
+
 Hold up both hands and the shape between your thumbs and index fingers
 becomes a "portal" showing your webcam through a filter. Everything outside
 the portal stays normal.
@@ -10,10 +12,29 @@ an X, with the filter in both halves.
 
 ## Setup
 
-Needs Python 3.10 or newer and a webcam. Developed and tested on macOS.
+Needs Python 3.10 or newer and a webcam. Works on macOS and Windows (and
+Linux); the automatic tests run on all three.
+
+Get the code: `git clone https://github.com/aarseniii/filter-portal.git`, or
+on GitHub click **Code > Download ZIP** and unzip it.
+
+### Windows
+
+1. Install Python from [python.org](https://www.python.org/downloads/). In
+   the installer, tick **"Add python.exe to PATH"**.
+2. In the `filter-portal` folder, double-click **`Filter Portal.bat`**.
+
+The first time, it sets up everything it needs (takes a few minutes, needs
+internet). After that, double-clicking it starts Filter Portal straight
+away. Tip: right-click it > **Show more options > Send to > Desktop (create
+shortcut)** to start it from your desktop.
+
+If the camera won't open, check **Settings > Privacy & security > Camera**:
+"Camera access" and "Let desktop apps access your camera" must be on.
+
+### Mac / Linux
 
 ```bash
-git clone https://github.com/aarseniii/filter-portal.git
 cd filter-portal
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
@@ -28,8 +49,10 @@ Xcode or its command line tools):
 
 ## Run
 
-**The easy way (Mac, after `build_app.py`):** click **Filter Portal** in the
-Dock (or press Cmd+Space, type "Filter Portal", press Enter).
+**Windows:** double-click **`Filter Portal.bat`**.
+
+**Mac (after `build_app.py`):** click **Filter Portal** in the Dock (or
+press Cmd+Space, type "Filter Portal", press Enter).
 
 - The very first time, macOS asks to let Filter Portal use the camera:
   click **Allow**. If you clicked "Don't Allow" by mistake, the app shows a
@@ -42,14 +65,15 @@ Dock (or press Cmd+Space, type "Filter Portal", press Enter).
 **From a terminal** (in this folder):
 
 ```bash
-.venv/bin/python filter_portal.py
+.venv/bin/python filter_portal.py        # Mac / Linux
+.venv\Scripts\python filter_portal.py    # Windows
 ```
 
 The first run downloads MediaPipe's hand model (`hand_landmarker.task`,
-~8 MB). When run from a terminal, it's the terminal app that needs camera
-access (System Settings > Privacy & Security > Camera).
+~8 MB). On a Mac, when run from a terminal, it's the terminal app that needs
+camera access (System Settings > Privacy & Security > Camera).
 
-### Rebuilding the Mac app
+### Rebuilding the Mac app (Mac only)
 
 ```bash
 .venv/bin/python build_app.py
@@ -114,6 +138,9 @@ In the recorder, press `T` to record touches, `N` to record anything else
 well the model does on the newest part of your recordings, which it didn't
 train on.
 
+On Windows, use `.venv\Scripts\python` instead of `.venv/bin/python` in the
+commands in this README.
+
 ## Tests
 
 The tests don't use the webcam or open any windows:
@@ -123,8 +150,11 @@ The tests don't use the webcam or open any windows:
 bash tests/test_app_launcher.sh
 ```
 
-The second one checks the Mac app's launcher with fake projects, using a
-throwaway copy of the app (your real app and Dock aren't touched).
+The second one (Mac only) checks the Mac app's launcher with fake projects,
+using a throwaway copy of the app (your real app and Dock aren't touched).
+
+GitHub runs these automatically on Windows, macOS and Linux after every
+push (see the badge at the top and the **Actions** tab).
 
 ## Files
 
@@ -133,9 +163,11 @@ throwaway copy of the app (your real app and Dock aren't touched).
 | `filter_portal.py` | The app |
 | `train_gesture_model.py` | Trains the pinky-thumb model |
 | `record_my_gesture.py` | Records your own gesture examples (landmarks only) |
+| `Filter Portal.bat` | Windows: double-click to set up (first time) and start |
 | `build_app.py` | Makes the Mac app in `~/Applications` |
 | `pinky_thumb_model.npz` | The trained model (plain numpy arrays) |
 | `tests/` | Headless tests |
+| `.github/workflows/tests.yml` | Runs the tests on Windows, macOS and Linux |
 
 ## License and credits
 

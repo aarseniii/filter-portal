@@ -294,9 +294,9 @@ class TrainingDataTests(unittest.TestCase):
         other = np.array(SAMPLE_HANDS["fist"], np.float32)
         self.assertEqual(save_samples(self.path, [touch] * 3, [1] * 3), 3)
         self.assertEqual(save_samples(self.path, [other] * 2, [0] * 2), 5)
-        saved = np.load(self.path)
-        self.assertEqual(saved["hands"].shape, (5, 21, 2))
-        self.assertEqual(saved["labels"].tolist(), [1, 1, 1, 0, 0])
+        with np.load(self.path) as saved:
+            self.assertEqual(saved["hands"].shape, (5, 21, 2))
+            self.assertEqual(saved["labels"].tolist(), [1, 1, 1, 0, 0])
 
     def test_newest_recordings_are_kept_for_testing(self):
         import train_gesture_model as tg

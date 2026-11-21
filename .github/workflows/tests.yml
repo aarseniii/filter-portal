@@ -1,0 +1,88 @@
+# Runs Filter Portal's tests on Windows, macOS and Linux after every push.
+# GitHub's machines have no webcam, so this checks everything except the
+# live camera: setup, the filters, the gesture model and the hand tracker.
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      # Windows: set up exactly the way double-clicking the file does.
+      - name: Set up with "Filter Portal.bat" (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "Filter Portal.bat" --setup-only
+          if errorlevel 1 exit /b 1
+
+      - name: Set up .venv (macOS / Linux)
+        if: runner.os != 'Windows'
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements.txt
+
+      - name: OpenGL library that OpenCV needs (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgl1
+
+      - name: Use the .venv's Python from here on
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "PY=.venv/Scripts/python.exe" >> "$GITHUB_ENV"
+          else
+            echo "PY=.venv/bin/python" >> "$GITHUB_ENV"
+          fi
+
+      - name: Show versions
+        shell: bash
+        run: |
+          $PY --version
+          $PY -c "import cv2, mediapipe, numpy; print('opencv', cv2.__version__, '| mediapipe', mediapipe.__version__, '| numpy', numpy.__version__)"
+
+      - name: Install training packages (some tests use them)
+        shell: bash
+        run: $PY -m pip install -r requirements-train.txt
+
+      - name: Unit tests (no camera)
+        shell: bash
+        run: $PY -m unittest discover tests -v
+
+      - name: Hand tracker starts and runs (no camera)
+        shell: bash
+        run: |
+          $PY -c "
+          import numpy as np, filter_portal as fp
+          fp.ensure_model()
+          tracker = fp.create_hand_tracker()
+          hands = fp.detect_hands(tracker, np.zeros((720, 1280, 3), np.uint8), 0)
+          tracker.close()
+          print('hand tracker OK, hands in a blank image:', len(hands))
+          assert fp.load_gesture_detector() is not None
+          print('gesture model OK')
+          "
+
+      - name: Mac app launcher tests (macOS)
+        if: runner.os == 'macOS'
+        run: bash tests/test_app_launcher.sh
